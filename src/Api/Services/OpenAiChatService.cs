@@ -78,12 +78,17 @@ public class OpenAiChatService : IOpenAiChatService
             baseUrl = DefaultBaseUrl;
         }
 
+        // Gemini models count internal thinking tokens against max_tokens; ensure enough headroom for complete JSON output.
+        var effectiveMaxTokens = baseUrl.Contains("generativelanguage.googleapis.com", StringComparison.OrdinalIgnoreCase)
+            ? Math.Max(maxTokens, 1024)
+            : maxTokens;
+
         var messages = BuildPromptMessages(userMessage, conversationHistory, retrievedEntries);
 
         var requestPayload = new
         {
             model,
-            max_tokens = maxTokens,
+            max_tokens = effectiveMaxTokens,
             temperature,
             response_format = new { type = "json_object" },
             messages
