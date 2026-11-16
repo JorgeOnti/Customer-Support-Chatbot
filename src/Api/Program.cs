@@ -1,5 +1,6 @@
 using System.Text.Json.Serialization;
 using ForkAndFlame.SupportApi.Data;
+using ForkAndFlame.SupportApi.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -9,6 +10,12 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 
 builder.Services.AddDbContext<SupportDbContext>(options =>
     options.UseSqlite(connectionString));
+
+builder.Services.AddScoped<IKnowledgeRetrievalService, KnowledgeRetrievalService>();
+builder.Services.AddHttpClient<IOpenAiChatService, OpenAiChatService>(client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(30);
+});
 
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
     ?? ["http://localhost:5173", "http://127.0.0.1:5173"];
