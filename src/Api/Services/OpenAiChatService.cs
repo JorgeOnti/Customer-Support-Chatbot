@@ -320,7 +320,16 @@ public class OpenAiChatService : IOpenAiChatService
         try
         {
             using var doc = JsonDocument.Parse(responseBody);
-            if (doc.RootElement.TryGetProperty("error", out var errorObj) &&
+            var root = doc.RootElement;
+
+            if (root.ValueKind == JsonValueKind.Array && root.GetArrayLength() > 0)
+            {
+                root = root[0];
+            }
+
+            if (root.ValueKind == JsonValueKind.Object &&
+                root.TryGetProperty("error", out var errorObj) &&
+                errorObj.ValueKind == JsonValueKind.Object &&
                 errorObj.TryGetProperty("message", out var msgProp))
             {
                 return msgProp.GetString();
